@@ -421,7 +421,7 @@
 <script>
 const URLS = {
   orders:   'https://script.google.com/macros/s/AKfycbxsZbXGfBPJvSdP2CmI-n67kTw6H_TMZRIUrW6yHMkYHT3VYvGLSUFHeZS4sw_I-rGO/exec',
-  stock:    'https://script.google.com/macros/s/AKfycbw4B_fzBlVAn4NFo_djW0--RfAx0-2QKw9Y4GMHmvInEgQG3fGRnGQg9jx7t2N9ARDDw/exec',
+  stock:    'https://script.google.com/macros/s/AKfycbw4B_fzBlVAn4NFo_djW0--RfAx0-2QKw9Y4GMHmvInEgQG3fFbRnGQg9jx7t2N9ARDDw/exec',
   statement:'https://script.google.com/macros/s/AKfycbyIoc8znbjFNF6Aa4gFei8a8yVLqgM1OlQYl4Ug2aDmvk0U9ahBDPibBI20iRwI9q0/exec',
   team:     'https://script.google.com/macros/s/AKfycbweIvKGczaTCSajyIv3sIWRJQu2aR57nHIcYJ_oVS6t36eCReIN_mkLSUoP0BTO-QJk/exec'
 };
@@ -450,7 +450,7 @@ async function loadOrders() {
     document.getElementById('oBlue').textContent    = fmt(d.blue    || 0);
     document.getElementById('oGem').textContent     = fmt(d.gem     || 0);
     document.getElementById('oDeliver').textContent = fmt(d.delivered || 0);
-    document.getElementById('oOrders').textContent  = fmt(d.orders  || 0) + ' orders';
+    document.getElementById('oOrders').textContent  = 'ชิ้นที่จัดส่งแล้ว';
     document.getElementById('orderSheetName').textContent = d.sheetName || '';
 
     // chart
