@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE8;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1A1916;
+    --text2: #6B6960;
+    --text3: #A8A49C;
+    --red: #D94040;
+    --red-bg: #FDF0F0;
+    --blue: #2B7AD4;
+    --blue-bg: #EEF5FD;
+    --gray: #767370;
+    --gray-bg: #F0EEE8;
+    --green: #2E7D4F;
+    --green-bg: #EDF7F1;
+    --accent: #1A1916;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ---- header ---- */
+  .header {
+    background: var(--accent);
+    padding: 20px 20px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-inner { display: flex; justify-content: space-between; align-items: flex-end; }
+  .header h1 { font-size: 17px; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
+  .header-date { font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
+  .refresh-btn {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    font-family: 'Sarabun', sans-serif;
+    transition: background 0.15s;
+  }
+  .refresh-btn:hover { background: rgba(255,255,255,0.2); }
+  .refresh-btn svg { width: 13px; height: 13px; }
+
+  /* ---- content ---- */
+  .content { padding: 16px; max-width: 520px; margin: 0 auto; }
+
+  /* ---- section label ---- */
+  .sec-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ---- shortcuts ---- */
+  .shortcut-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .sc-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 12px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.12s, box-shadow 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sc-card:active { transform: scale(0.97); }
+  .sc-icon { font-size: 20px; }
+  .sc-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .sc-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+  .sc-arrow { font-size: 11px; color: var(--text3); margin-top: auto; }
+
+  /* ---- divider ---- */
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 20px 0; }
+
+  /* ---- stat cards ---- */
+  .stat-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat {
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .stat-val { font-size: 26px; font-weight: 600; line-height: 1; font-family: 'IBM Plex Mono', monospace; }
+  .stat-unit { font-size: 11px; }
+
+  .stat-red    { background: var(--red-bg);   }
+  .stat-red    .stat-label { color: var(--red);   }
+  .stat-red    .stat-val   { color: var(--red);   }
+  .stat-red    .stat-unit  { color: #E8888A; }
+  .dot-red     { background: var(--red); }
+
+  .stat-blue   { background: var(--blue-bg);  }
+  .stat-blue   .stat-label { color: var(--blue);  }
+  .stat-blue   .stat-val   { color: var(--blue);  }
+  .stat-blue   .stat-unit  { color: #6BA8E4; }
+  .dot-blue    { background: var(--blue); }
+
+  .stat-gray   { background: var(--gray-bg);  }
+  .stat-gray   .stat-label { color: var(--gray);  }
+  .stat-gray   .stat-val   { color: var(--gray);  }
+  .stat-gray   .stat-unit  { color: #A8A49C; }
+  .dot-gray    { background: var(--gray); }
+
+  .stat-dark   { background: var(--accent);   }
+  .stat-dark   .stat-label { color: rgba(255,255,255,0.55); }
+  .stat-dark   .stat-val   { color: #fff;      }
+  .stat-dark   .stat-unit  { color: rgba(255,255,255,0.45); }
+
+  .stat-green  { background: var(--green-bg); }
+  .stat-green  .stat-label { color: var(--green); }
+  .stat-green  .stat-val   { color: var(--green); }
+  .stat-green  .stat-unit  { color: #6BAA87; }
+
+  /* ---- chart ---- */
+  .chart-section { margin-bottom: 4px; }
+  .chart-legend { display: flex; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text2); }
+  .leg-sq { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .chart-wrap { position: relative; width: 100%; height: 150px; background: var(--surface); border-radius: var(--radius-sm); padding: 10px; border: 0.5px solid var(--border); }
+
+  /* ---- balance ---- */
+  .balance-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bal-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; }
+  .bal-val { font-size: 28px; font-weight: 600; color: var(--text); font-family: 'IBM Plex Mono', monospace; letter-spacing: -0.02em; }
+  .bal-currency { font-size: 14px; color: var(--text2); margin-left: 4px; }
+  .bal-icon { font-size: 32px; opacity: 0.15; }
+
+  /* ---- team list ---- */
+  .team-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .team-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.1s;
+  }
+  .team-row:last-child { border-bottom: none; }
+  .tr-name { font-size: 14px; color: var(--text); }
+  .tr-val { font-size: 14px; font-weight: 600; color: var(--text); font-family: 'IBM Plex Mono', monospace; }
+  .team-period {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 8px 14px;
+    background: var(--surface2);
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  /* ---- loading / error ---- */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px;
+    z-index: 100;
+    transition: opacity 0.3s;
+  }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text3); }
+
+  .error-badge {
+    background: #FDF0F0;
+    border: 0.5px solid #F5BCBC;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  /* ---- footnote ---- */
+  .footnote {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.6;
+  }
+
+  /* fade-in on load */
+  .fade-in { animation: fadeUp 0.4s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in:nth-child(2) { animation-delay: 0.05s; }
+  .fade-in:nth-child(3) { animation-delay: 0.1s; }
+  .fade-in:nth-child(4) { animation-delay: 0.15s; }
+  .fade-in:nth-child(5) { animation-delay: 0.2s; }
+  .fade-in:nth-child(6) { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">กำลังโหลดข้อมูล...</div>
+</div>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>Team Dashboard</h1>
+      <div class="header-date" id="headerDate">—</div>
+    </div>
+    <button class="refresh-btn" onclick="loadAll()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13.5 8A5.5 5.5 0 1 1 10 3.07"/><path d="M10 1v3h3"/>
+      </svg>
+      รีเฟรช
+    </button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- shortcuts -->
+  <div class="fade-in">
+    <p class="sec-label">ลิงก์ด่วน</p>
+    <div class="shortcut-grid">
+      <a class="sc-card" href="https://docs.google.com/spreadsheets/d/1qKXWi6xEOvAFZQsI7YSv9pV7Z6ZaRY7nbBHM6NilxM4/edit" target="_blank">
+        <div class="sc-icon">📦</div>
+        <div class="sc-name">คำสั่งซื้อ</div>
+        <div class="sc-desc">ออร์เดอร์รายเดือน</div>
+        <div class="sc-arrow">เปิด ↗</div>
+      </a>
+      <a class="sc-card" href="https://docs.google.com/spreadsheets/d/1eKe3EyqghcZT5ltcTp6bgAgr8s_Udq4RYK-fp5ijY8k/edit" target="_blank">
+        <div class="sc-icon">🗂️</div>
+        <div class="sc-name">Stock สินค้า</div>
+        <div class="sc-desc">ยอดคงเหลือแต่ละประเภท</div>
+        <div class="sc-arrow">เปิด ↗</div>
+      </a>
+      <a class="sc-card" href="https://docs.google.com/spreadsheets/d/1eKe3EyqghcZT5ltcTp6bgAgr8s_Udq4RYK-fp5ijY8k/edit" target="_blank">
+        <div class="sc-icon">💰</div>
+        <div class="sc-name">Statement</div>
+        <div class="sc-desc">รายรับ-รายจ่าย</div>
+        <div class="sc-arrow">เปิด ↗</div>
+      </a>
+      <a class="sc-card" href="https://docs.google.com/spreadsheets/d/1sD0XLClQl-5Nu9w2K0_AN5-UPXccVXTKXcBw0w-AlIk/edit" target="_blank">
+        <div class="sc-icon">👥</div>
+        <div class="sc-name">จ่ายเงินทีม</div>
+        <div class="sc-desc">ค่าตอบแทนลูกน้อง</div>
+        <div class="sc-arrow">เปิด ↗</div>
+      </a>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- orders -->
+  <div class="fade-in">
+    <p class="sec-label">คำสั่งซื้อเดือนปัจจุบัน — <span id="orderSheetName">—</span></p>
+    <div id="orderError" class="error-badge">⚠ ไม่สามารถโหลดข้อมูลได้</div>
+    <div class="stat-grid2" style="margin-bottom:8px">
+      <div class="stat stat-red">
+        <div class="stat-label"><span class="dot dot-red"></span>แดง</div>
+        <div class="stat-val" id="oRed">—</div>
+        <div class="stat-unit">ชิ้น</div>
+      </div>
+      <div class="stat stat-blue">
+        <div class="stat-label"><span class="dot dot-blue"></span>ฟ้า / ดำ</div>
+        <div class="stat-val" id="oBlue">—</div>
+        <div class="stat-unit">ชิ้น</div>
+      </div>
+      <div class="stat stat-gray">
+        <div class="stat-label"><span class="dot dot-gray"></span>ตาเพชร</div>
+        <div class="stat-val" id="oGem">—</div>
+        <div class="stat-unit">ชิ้น</div>
+      </div>
+      <div class="stat stat-dark">
+        <div class="stat-label">จัดส่งแล้ว</div>
+        <div class="stat-val" id="oDeliver">—</div>
+        <div class="stat-unit" id="oOrders">— orders</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-legend">
+        <span class="leg"><span class="leg-sq" style="background:#D94040"></span>แดง</span>
+        <span class="leg"><span class="leg-sq" style="background:#2B7AD4"></span>ฟ้า/ดำ</span>
+        <span class="leg"><span class="leg-sq" style="background:#767370"></span>ตาเพชร</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="salesChart" role="img" aria-label="กราฟยอดขายรายวันแยกตามประเภทสินค้า">กราฟยอดขายรายวัน</canvas>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- stock -->
+  <div class="fade-in">
+    <p class="sec-label">Stock คงเหลือ</p>
+    <div id="stockError" class="error-badge">⚠ ไม่สามารถโหลดข้อมูลได้</div>
+    <div class="stat-grid3">
+      <div class="stat stat-red">
+        <div class="stat-label"><span class="dot dot-red"></span>แดง</div>
+        <div class="stat-val" id="sRed">—</div>
+        <div class="stat-unit">ชิ้น</div>
+      </div>
+      <div class="stat stat-blue">
+        <div class="stat-label"><span class="dot dot-blue"></span>ฟ้า/ดำ</div>
+        <div class="stat-val" id="sBlue">—</div>
+        <div class="stat-unit">ชิ้น</div>
+      </div>
+      <div class="stat stat-gray">
+        <div class="stat-label"><span class="dot dot-gray"></span>ตาเพชร</div>
+        <div class="stat-val" id="sGem">—</div>
+        <div class="stat-unit">ชิ้น</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- balance -->
+  <div class="fade-in">
+    <p class="sec-label">ยอดเงินคงเหลือ</p>
+    <div id="balError" class="error-badge">⚠ ไม่สามารถโหลดข้อมูลได้</div>
+    <div class="balance-card">
+      <div>
+        <div class="bal-label" id="balDate">Statement ล่าสุด</div>
+        <div class="bal-val" id="balVal">—<span class="bal-currency">฿</span></div>
+      </div>
+      <div class="bal-icon">💳</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- team pay -->
+  <div class="fade-in">
+    <p class="sec-label">ค่าตอบแทนทีม</p>
+    <div id="teamError" class="error-badge">⚠ ไม่สามารถโหลดข้อมูลได้</div>
+    <div class="team-card">
+      <div class="team-period" id="teamPeriod">รอบ —</div>
+      <div class="team-row"><span class="tr-name">เสือ</span><span class="tr-val" id="tSuea">—</span></div>
+      <div class="team-row"><span class="tr-name">ปอป</span><span class="tr-val" id="tPop">—</span></div>
+      <div class="team-row"><span class="tr-name">โกบี้</span><span class="tr-val" id="tGobi">—</span></div>
+      <div class="team-row"><span class="tr-name">ท็อป</span><span class="tr-val" id="tTop">—</span></div>
+      <div class="team-row"><span class="tr-name">อาม</span><span class="tr-val" id="tArm">—</span></div>
+    </div>
+  </div>
+
+  <div class="footnote" id="footnote">อัพเดทล่าสุด: —</div>
+
+</div>
+
+<script>
+const URLS = {
+  orders:   'https://script.google.com/macros/s/AKfycbxsZbXGfBPJvSdP2CmI-n67kTw6H_TMZRIUrW6yHMkYHT3VYvGLSUFHeZS4sw_I-rGO/exec',
+  stock:    'https://script.google.com/macros/s/AKfycbw4B_fzBlVAn4NFo_djW0--RfAx0-2QKw9Y4GMHmvInEgQG3fGRnGQg9jx7t2N9ARDDw/exec',
+  statement:'https://script.google.com/macros/s/AKfycbyIoc8znbjFNF6Aa4gFei8a8yVLqgM1OlQYl4Ug2aDmvk0U9ahBDPibBI20iRwI9q0/exec',
+  team:     'https://script.google.com/macros/s/AKfycbweIvKGczaTCSajyIv3sIWRJQu2aR57nHIcYJ_oVS6t36eCReIN_mkLSUoP0BTO-QJk/exec'
+};
+
+let salesChart = null;
+
+function fmt(n) {
+  return Number(n).toLocaleString('th-TH');
+}
+
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+function setError(id, show) {
+  document.getElementById(id).style.display = show ? 'block' : 'none';
+}
+
+async function loadOrders() {
+  try {
+    const d = await fetchJSON(URLS.orders);
+    setError('orderError', false);
+    document.getElementById('oRed').textContent     = fmt(d.red     || 0);
+    document.getElementById('oBlue').textContent    = fmt(d.blue    || 0);
+    document.getElementById('oGem').textContent     = fmt(d.gem     || 0);
+    document.getElementById('oDeliver').textContent = fmt(d.delivered || 0);
+    document.getElementById('oOrders').textContent  = fmt(d.orders  || 0) + ' orders';
+    document.getElementById('orderSheetName').textContent = d.sheetName || '';
+
+    // chart
+    const dailyRed  = d.dailyRed  || [];
+    const dailyBlue = d.dailyBlue || [];
+    const dailyGem  = d.dailyGem  || [];
+    const labels    = d.dailyLabels || dailyRed.map((_,i) => String(i+1));
+
+    if (salesChart) { salesChart.destroy(); salesChart = null; }
+    const canvas = document.getElementById('salesChart');
+    salesChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label:'แดง',    data: dailyRed,  backgroundColor:'#D94040', stack:'s', borderRadius:2 },
+          { label:'ฟ้า/ดำ', data: dailyBlue, backgroundColor:'#2B7AD4', stack:'s', borderRadius:2 },
+          { label:'ตาเพชร', data: dailyGem,  backgroundColor:'#767370', stack:'s', borderRadius:2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { title: ctx => 'วันที่ ' + ctx[0].label } }
+        },
+        scales: {
+          x: { grid:{display:false}, ticks:{font:{size:9}, color:'#A8A49C', autoSkip:true, maxTicksLimit:10} },
+          y: { grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:9}, color:'#A8A49C'}, beginAtZero:true }
+        }
+      }
+    });
+  } catch(e) {
+    setError('orderError', true);
+    console.error('orders:', e);
+  }
+}
+
+async function loadStock() {
+  try {
+    const d = await fetchJSON(URLS.stock);
+    setError('stockError', false);
+    document.getElementById('sRed').textContent  = fmt(d.red  || 0);
+    document.getElementById('sBlue').textContent = fmt(d.blue || 0);
+    document.getElementById('sGem').textContent  = fmt(d.gem  || 0);
+  } catch(e) {
+    setError('stockError', true);
+    console.error('stock:', e);
+  }
+}
+
+async function loadStatement() {
+  try {
+    const d = await fetchJSON(URLS.statement);
+    setError('balError', false);
+    document.getElementById('balVal').innerHTML = fmt(d.balance || 0) + '<span class="bal-currency">฿</span>';
+    if (d.date) {
+      document.getElementById('balDate').textContent = 'Statement ล่าสุด — ' + d.date;
+    }
+  } catch(e) {
+    setError('balError', true);
+    console.error('statement:', e);
+  }
+}
+
+async function loadTeam() {
+  try {
+    const d = await fetchJSON(URLS.team);
+    setError('teamError', false);
+    if (d.period) document.getElementById('teamPeriod').textContent = 'รอบ ' + d.period;
+    document.getElementById('tSuea').textContent = fmt(d.suea || 0) + ' ฿';
+    document.getElementById('tPop').textContent  = fmt(d.pop  || 0) + ' ฿';
+    document.getElementById('tGobi').textContent = fmt(d.gobi || 0) + ' ฿';
+    document.getElementById('tTop').textContent  = fmt(d.top  || 0) + ' ฿';
+    document.getElementById('tArm').textContent  = fmt(d.arm  || 0) + ' ฿';
+  } catch(e) {
+    setError('teamError', true);
+    console.error('team:', e);
+  }
+}
+
+async function loadAll() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.remove('hidden');
+
+  const now = new Date().toLocaleString('th-TH', {
+    year:'numeric', month:'long', day:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+  document.getElementById('headerDate').textContent = now;
+
+  await Promise.allSettled([loadOrders(), loadStock(), loadStatement(), loadTeam()]);
+
+  document.getElementById('footnote').textContent = 'อัพเดทล่าสุด: ' + now;
+  overlay.classList.add('hidden');
+}
+
+loadAll();
+</script>
+</body>
+</html>
